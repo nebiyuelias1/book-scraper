@@ -4,6 +4,7 @@ from typing import Optional
 @dataclass
 class Book:
     title: str
+    title_en: Optional[str] = None
     author: Optional[str] = None
     description: Optional[str] = None
     published_at: Optional[str] = None # Keeping as string 'YYYY-MM-DD' for CSV simplicity
@@ -17,6 +18,7 @@ class Book:
     def to_dict(self):
         return {
             "title": self.title,
+            "title_en": self.title_en,
             "author": self.author,
             "description": self.description,
             "published_at": self.published_at,
