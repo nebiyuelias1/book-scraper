@@ -16,8 +16,8 @@ def save_books_to_csv(books: List[Book], filename: str):
             dict_writer.writerow(book.to_dict())
 
 def main():
-    # Global limit for all scrapers
     LIMIT_PER_SOURCE = 100
+    EXCLUDE_BOOKS_BY_ABIY_AHMED = False
     
     all_books: List[Book] = []
     seen_titles = set()
