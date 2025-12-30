@@ -1,4 +1,5 @@
 import csv
+import re
 import sys
 from typing import List
 from src.models import Book
@@ -16,9 +17,14 @@ def save_books_to_csv(books: List[Book], filename: str):
             dict_writer.writerow(book.to_dict())
 
 def main():
-    LIMIT_PER_SOURCE = 100
-    EXCLUDE_BOOKS_BY_ABIY_AHMED = False
+    LIMIT_PER_SOURCE = 1
+    EXCLUDE_AUTHORS = [
+        # r"Abiy\s*Ahmed",
+        # r"አብይ\s*አህመድ"
+    ]
     
+    exclude_pattern = re.compile("|".join(EXCLUDE_AUTHORS), re.IGNORECASE)
+
     all_books: List[Book] = []
     seen_titles = set()
 
@@ -27,7 +33,11 @@ def main():
         for book in new_books:
             if not book.title:
                 continue
-            # Normalize title for comparison
+            
+            if EXCLUDE_AUTHORS and book.author and exclude_pattern.search(book.author):
+                print(f"Skipping book by excluded author: {book.author} - {book.title}")
+                continue
+
             norm_title = " ".join(book.title.strip().lower().split())
             if norm_title not in seen_titles:
                 seen_titles.add(norm_title)
