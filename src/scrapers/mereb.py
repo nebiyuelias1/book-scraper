@@ -35,8 +35,17 @@ class MerebScraper(BaseScraper):
             
             # Construct params
             # We filter for categoryI=Books to ensure we only get books
+            params = (
+                f"facets=%5B%22categoryI%22%5D&"
+                f"facetFilters=%5B%5B%22categoryI%3ABooks%22%5D%5D&"
+                f"highlightPostTag=__%2Fais-highlight__&"
+                f"highlightPreTag=__ais-highlight__&"
+                f"maxValuesPerFacet=30&"
+                f"hitsPerPage={hits_per_page}&"
+                f"page={page-1}&"
+                f"query="
+            )
 
-            
             payload = {
                 "requests": [
                     {
