@@ -6,6 +6,7 @@ from src.models import Book
 from src.scrapers.goodreads import GoodreadsScraper
 from src.scrapers.ethiobookreview import EthioBookReviewScraper
 from src.scrapers.mereb import MerebScraper
+from src.scrapers.hahubooks import HahuBooksScraper
 
 def save_books_to_csv(books: List[Book], filename: str):
     fieldnames = ["title", "title_en", "author", "description", "published_at", "language", "cover_image", "publisher", "isbn", "source", "url"]
@@ -75,7 +76,17 @@ def main():
     except Exception as e:
         print(f"Goodreads Scraper failed: {e}")
 
-    # 4. Save Combined Results
+    # 4. Scrape HahuBooks
+    try:
+        print("\nStarting HahuBooks Scraper...")
+        hahu_scraper = HahuBooksScraper()
+        hahu_books = hahu_scraper.scrape(limit=LIMIT_PER_SOURCE)
+        added = add_books_if_unique(hahu_books)
+        print(f"Finished HahuBooks. Collected {len(hahu_books)} books. Added {added} unique.")
+    except Exception as e:
+        print(f"HahuBooks Scraper failed: {e}")
+
+    # 5. Save Combined Results
     output_filename = 'data/ethiopian_books.csv'
     if all_books:
         save_books_to_csv(all_books, output_filename)
