@@ -7,15 +7,32 @@ from src.scrapers.goodreads import GoodreadsScraper
 from src.scrapers.ethiobookreview import EthioBookReviewScraper
 from src.scrapers.mereb import MerebScraper
 from src.scrapers.hahubooks import HahuBooksScraper
+from src.scrapers.gebeyaaddis import GebeyaAddisScraper
+
 
 def save_books_to_csv(books: List[Book], filename: str):
-    fieldnames = ["title", "title_en", "author", "description", "published_at", "language", "cover_image", "publisher", "isbn", "source", "url"]
-    
-    with open(filename, 'w', newline='', encoding='utf-8') as output_file:
-        dict_writer = csv.DictWriter(output_file, fieldnames=fieldnames, extrasaction='ignore')
+    fieldnames = [
+        "title",
+        "title_en",
+        "author",
+        "description",
+        "published_at",
+        "language",
+        "cover_image",
+        "publisher",
+        "isbn",
+        "source",
+        "url",
+    ]
+
+    with open(filename, "w", newline="", encoding="utf-8") as output_file:
+        dict_writer = csv.DictWriter(
+            output_file, fieldnames=fieldnames, extrasaction="ignore"
+        )
         dict_writer.writeheader()
         for book in books:
             dict_writer.writerow(book.to_dict())
+
 
 def main():
     LIMIT_PER_SOURCE = 1
@@ -23,7 +40,7 @@ def main():
         # r"Abiy\s*Ahmed",
         # r"አብይ\s*አህመድ"
     ]
-    
+
     exclude_pattern = re.compile("|".join(EXCLUDE_AUTHORS), re.IGNORECASE)
 
     all_books: List[Book] = []
@@ -34,7 +51,7 @@ def main():
         for book in new_books:
             if not book.title:
                 continue
-            
+
             if EXCLUDE_AUTHORS and book.author and exclude_pattern.search(book.author):
                 print(f"Skipping book by excluded author: {book.author} - {book.title}")
                 continue
@@ -86,13 +103,26 @@ def main():
     except Exception as e:
         print(f"HahuBooks Scraper failed: {e}")
 
-    # 5. Save Combined Results
-    output_filename = 'data/ethiopian_books.csv'
+    # 5. Scrape GebeyaAddis
+    try:
+        print("\nStarting GebeyaAddis Scraper...")
+        ga_scraper = GebeyaAddisScraper()
+        ga_books = ga_scraper.scrape(limit=LIMIT_PER_SOURCE)
+        added = add_books_if_unique(ga_books)
+        print(
+            f"Finished GebeyaAddis. Collected {len(ga_books)} books. Added {added} unique."
+        )
+    except Exception as e:
+        print(f"GebeyaAddis Scraper failed: {e}")
+
+    # 6. Save Combined Results
+    output_filename = "data/ethiopian_books.csv"
     if all_books:
         save_books_to_csv(all_books, output_filename)
         print(f"\nSUCCESS: Saved total of {len(all_books)} books to {output_filename}")
     else:
         print("\nNo books collected from any source.")
+
 
 if __name__ == "__main__":
     main()
