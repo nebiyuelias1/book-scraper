@@ -20,6 +20,7 @@ class Book:
     source: Optional[str] = None
     url: Optional[str] = None
     category: List[str] = None
+    page_count: Optional[int] = None
 
     def __post_init__(self):
         if self.category is None:
@@ -35,6 +36,7 @@ class Book:
             "description": self.description,
             "published_at": self.published_at,
             "language": self.language,
+            "page_count": self.page_count,
             "cover_image": self.cover_image,
             "publisher": self.publisher,
             "isbn": self.isbn,

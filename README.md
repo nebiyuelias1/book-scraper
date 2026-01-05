@@ -11,6 +11,7 @@ Collect data on Ethiopian books from multiple online sources and unify them into
   - [HahuBooks](https://www.hahubooks.com)
   - [GebeyaAddis](https://www.gebeyaaddis.com)
   - [SodereStore](https://soderestore.com)
+- **Data Enrichment**: Integrates with **Google Books API** to fill missing details like ISBN, page counts, publisher, and publication dates.
 - **Romanization**: Automatically generates Latin-character phonetic versions (transliteration) of Amharic titles and authors using the `abyssinica` library.
 - **Amharic Script Normalization**: Automatically detects English/Latin author names and converts them to Amharic script using the `fidel` library to ensure consistency across the dataset.
 - **Category Extraction**: Extracts book categories and genres from all sources where available.
@@ -25,6 +26,7 @@ Collect data on Ethiopian books from multiple online sources and unify them into
 ├── data/                   # Scraped data artifacts (CSV)
 ├── src/
 │   ├── models.py           # Book data model
+│   ├── enrichment.py       # Google Books API integration
 │   └── scrapers/           # Source-specific scraper implementations
 │       ├── base_scraper.py # Abstract base class
 │       ├── goodreads.py    # Goodreads implementation
@@ -51,6 +53,7 @@ The generated CSV (`data/ethiopian_books.csv`) follows this structure:
 | `description` | Text | Book synopsis (cleaned of newlines) |
 | `published_at` | Date | Normalized date (`YYYY-MM-DD`) |
 | `language` | String | Language code (default: `am`) |
+| `page_count` | Integer | Number of pages (enriched via Google Books) |
 | `cover_image` | String | URL to the book cover image |
 | `publisher` | String | Name of the publisher |
 | `isbn` | String | ISBN-13 or ISBN-10 |

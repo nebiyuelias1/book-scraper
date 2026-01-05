@@ -1,10 +1,12 @@
 import csv
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from abyssinica import romanization
 from fidel import Transliterate
 from typing import List
 from src.models import Book
+from src.enrichment import GoogleBooksEnricher
 from src.scrapers.goodreads import GoodreadsScraper
 from src.scrapers.ethiobookreview import EthioBookReviewScraper
 from src.scrapers.mereb import MerebScraper
@@ -23,6 +25,7 @@ def save_books_to_csv(books: List[Book], filename: str):
         "description",
         "published_at",
         "language",
+        "page_count",
         "cover_image",
         "publisher",
         "isbn",
@@ -168,7 +171,40 @@ def main():
     except Exception as e:
         print(f"SodereStore Scraper failed: {e}")
 
-    # 7. Save Combined Results
+    # 7. Enrich Data with Google Books API
+    if all_books:
+        print("\nStarting Google Books Enrichment...")
+        enricher = GoogleBooksEnricher()
+        
+        # Filter books that need enrichment to avoid wasting threads
+        books_to_enrich = [
+            b for b in all_books 
+            if not (b.isbn and b.page_count and b.publisher)
+        ]
+        
+        total_to_enrich = len(books_to_enrich)
+        print(f"Identifying books to enrich: {total_to_enrich} out of {len(all_books)} need data.")
+
+        if books_to_enrich:
+            # max_workers=5 is a safe starting point to avoid 429s too quickly
+            with ThreadPoolExecutor(max_workers=5) as executor:
+                # Submit all tasks
+                future_to_book = {
+                    executor.submit(enricher.enrich, book): book 
+                    for book in books_to_enrich
+                }
+                
+                completed = 0
+                for future in as_completed(future_to_book):
+                    completed += 1
+                    # Print progress (overwrite line)
+                    print(f"Enriching progress: {completed}/{total_to_enrich}...", end="\r")
+            
+            print(f"\nFinished processing {total_to_enrich} books.")
+        else:
+            print("No books needed enrichment.")
+
+    # 8. Save Combined Results
     output_filename = "data/ethiopian_books.csv"
     if all_books:
         save_books_to_csv(all_books, output_filename)
