@@ -10,8 +10,10 @@ Collect data on Ethiopian books from multiple online sources and unify them into
   - [Mereb](https://www.mereb.shop) (Books Category via Algolia API)
   - [HahuBooks](https://www.hahubooks.com)
   - [GebeyaAddis](https://www.gebeyaaddis.com)
+  - [SodereStore](https://soderestore.com)
 - **Romanization**: Automatically generates Latin-character phonetic versions (transliteration) of Amharic titles and authors using the `abyssinica` library.
 - **Amharic Script Normalization**: Automatically detects English/Latin author names and converts them to Amharic script using the `fidel` library to ensure consistency across the dataset.
+- **Category Extraction**: Extracts book categories and genres from all sources where available.
 - **Unified Data Model**: Standardizes fields across different sources.
 - **Deduplication**: Filters out duplicate books based on normalized titles.
 - **Filtering**: Ability to exclude books by specific authors.
@@ -29,7 +31,8 @@ Collect data on Ethiopian books from multiple online sources and unify them into
 │       ├── mereb.py        # Mereb implementation
 │       ├── ethiobookreview.py # EthioBookReview implementation
 │       ├── hahubooks.py    # HahuBooks implementation
-│       └── gebeyaaddis.py  # GebeyaAddis implementation
+│       ├── gebeyaaddis.py  # GebeyaAddis implementation
+│       └── soderestore.py  # SodereStore implementation
 ├── main.py                 # Orchestration script
 └── .venv/                  # Python virtual environment
 ```
@@ -53,6 +56,7 @@ The generated CSV (`data/ethiopian_books.csv`) follows this structure:
 | `isbn` | String | ISBN-13 or ISBN-10 |
 | `source` | String | The origin of the data (e.g., Mereb) |
 | `url` | String | Source URL for the specific book |
+| `category` | String | Pipe-separated list of categories/genres (e.g., `Fiction|Romance`) |
 
 ## Installation
 
