@@ -87,6 +87,15 @@ class MerebScraper(BaseScraper):
                     # Primary title is Amharic, secondary is English
                     title = title_am if title_am else title_en
 
+                    categories = []
+                    # Mereb stores categories in categoryI (root), categoryII (sub), etc.
+                    # We can iterate to find them.
+                    for key in ["categoryI", "categoryII", "categoryIII"]:
+                        cat = hit.get(key)
+                        if cat:
+                             # "Books" is redundant if we want specific genres, but we can keep it.
+                             categories.append(cat)
+
                     book = Book(
                         title=title or "Unknown Title",
                         title_en=title_en,
@@ -98,7 +107,8 @@ class MerebScraper(BaseScraper):
                         publisher=None, # Not directly in Algolia hit
                         isbn=None, # Not directly in Algolia hit
                         source="Mereb",
-                        url=hit.get("url")
+                        url=hit.get("url"),
+                        category=categories
                     )
                     books.append(book)
                 

@@ -99,6 +99,20 @@ class GoodreadsScraper(BaseScraper):
             
             cover_image = json_data.get("image") or (soup.find("img", {"class": "ResponsiveImage"})['src'] if soup.find("img", {"class": "ResponsiveImage"}) else None)
             
+            # Genres/Categories
+            genres = []
+            genre_tags = soup.find_all("span", {"class": "BookPageMetadataSection__genreButton"})
+            if not genre_tags:
+                # Try newer/alternative selector
+                genre_section = soup.find("div", {"data-testid": "genresList"})
+                if genre_section:
+                    genre_tags = genre_section.find_all("a")
+            
+            for tag in genre_tags:
+                genre_text = tag.text.strip()
+                if genre_text and genre_text not in ["...more", "Genres"]:
+                    genres.append(genre_text)
+
             language = json_data.get("inLanguage") or "am"
             if language == "Amharic":
                 language = "am"
@@ -113,7 +127,8 @@ class GoodreadsScraper(BaseScraper):
                 "language": language,
                 "cover_image": cover_image,
                 "publisher": publisher,
-                "isbn": isbn
+                "isbn": isbn,
+                "category": genres
             }
         except Exception as e:
             print(f"Error scraping {url}: {e}")
@@ -157,7 +172,8 @@ class GoodreadsScraper(BaseScraper):
                         publisher=details.get("publisher"),
                         isbn=details.get("isbn"),
                         source="Goodreads",
-                        url=book_url
+                        url=book_url,
+                        category=details.get("category", [])
                     )
                     books.append(book)
                 

@@ -89,6 +89,18 @@ class GebeyaAddisScraper(BaseScraper):
                     img_tag = item.find("img")
                     cover_image = img_tag.get("src") if img_tag else None
 
+                    # Category from class names
+                    # class="product ... product_cat-books-christianity ..."
+                    categories = []
+                    classes = item.get("class", [])
+                    for cls in classes:
+                        if cls.startswith("product_cat-"):
+                            # product_cat-books-christianity -> Books Christianity
+                            cat_slug = cls.replace("product_cat-", "")
+                            cat_name = cat_slug.replace("-", " ").title()
+                            # Filter out generic 'Books' if we have more specific ones, or keep all
+                            categories.append(cat_name)
+
                     # Author (Fetch from detail page)
                     author = None
                     if book_url:
@@ -109,7 +121,8 @@ class GebeyaAddisScraper(BaseScraper):
                         publisher=None,
                         isbn=None,
                         source="GebeyaAddis",
-                        url=book_url
+                        url=book_url,
+                        category=categories
                     )
                     books.append(book)
                 

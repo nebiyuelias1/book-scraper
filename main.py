@@ -10,6 +10,7 @@ from src.scrapers.ethiobookreview import EthioBookReviewScraper
 from src.scrapers.mereb import MerebScraper
 from src.scrapers.hahubooks import HahuBooksScraper
 from src.scrapers.gebeyaaddis import GebeyaAddisScraper
+from src.scrapers.soderestore import SodereStoreScraper
 
 
 def save_books_to_csv(books: List[Book], filename: str):
@@ -27,6 +28,7 @@ def save_books_to_csv(books: List[Book], filename: str):
         "isbn",
         "source",
         "url",
+        "category",
     ]
 
     with open(filename, "w", newline="", encoding="utf-8") as output_file:
@@ -55,20 +57,24 @@ def main():
         for book in new_books:
             if not book.title:
                 continue
-            
+
             if EXCLUDE_AUTHORS and book.author and exclude_pattern.search(book.author):
                 print(f"Skipping book by excluded author: {book.author} - {book.title}")
                 continue
 
             # Ensure Author is in Amharic if it's currently in English
-            if book.author and not re.search(r'[\u1200-\u137F]', book.author):
+            if book.author and not re.search(r"[\u1200-\u137F]", book.author):
                 try:
                     # If it has no Ethiopic characters, assume it's English/Latin and convert
-                    book.author_romanized = book.author  # Save original English as romanized
+                    book.author_romanized = (
+                        book.author
+                    )  # Save original English as romanized
                     # Lowercase is required for fidel to handle capitalization correctly
                     book.author = Transliterate(book.author.lower()).transliterate()
                 except Exception as e:
-                    print(f"Warning: Failed to transliterate author '{book.author}': {e}")
+                    print(
+                        f"Warning: Failed to transliterate author '{book.author}': {e}"
+                    )
 
             # Romanize if not already present
             if not book.title_romanized and book.title:
@@ -76,7 +82,7 @@ def main():
                     book.title_romanized = romanization.romanize(book.title)
                 except Exception:
                     book.title_romanized = None
-            
+
             if not book.author_romanized and book.author:
                 try:
                     book.author_romanized = romanization.romanize(book.author)
@@ -150,7 +156,19 @@ def main():
     except Exception as e:
         print(f"GebeyaAddis Scraper failed: {e}")
 
-    # 6. Save Combined Results
+    # 6. Scrape SodereStore
+    try:
+        print("\nStarting SodereStore Scraper...")
+        ss_scraper = SodereStoreScraper()
+        ss_books = ss_scraper.scrape(limit=LIMIT_PER_SOURCE)
+        added = add_books_if_unique(ss_books)
+        print(
+            f"Finished SodereStore. Collected {len(ss_books)} books. Added {added} unique."
+        )
+    except Exception as e:
+        print(f"SodereStore Scraper failed: {e}")
+
+    # 7. Save Combined Results
     output_filename = "data/ethiopian_books.csv"
     if all_books:
         save_books_to_csv(all_books, output_filename)

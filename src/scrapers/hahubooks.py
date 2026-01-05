@@ -77,6 +77,15 @@ class HahuBooksScraper(BaseScraper):
                         if img_tag and img_tag.get("src"):
                             cover_image = urljoin(self.BASE_URL, img_tag.get("src"))
 
+                    # Category
+                    # <div class="hot__box color--2"><span class="hot-label">History</span></div>
+                    categories = []
+                    hot_box = thumb_div.find("div", class_="hot__box") if thumb_div else None
+                    if hot_box:
+                        label = hot_box.find("span", class_="hot-label")
+                        if label:
+                            categories.append(self._clean_text(label.text))
+
                     book = Book(
                         title=title,
                         author=author,
@@ -87,7 +96,8 @@ class HahuBooksScraper(BaseScraper):
                         publisher=None,
                         isbn=None,
                         source="HahuBooks",
-                        url=book_url
+                        url=book_url,
+                        category=categories
                     )
                     books.append(book)
                 

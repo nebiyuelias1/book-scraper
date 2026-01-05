@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -19,6 +19,11 @@ class Book:
     isbn: Optional[str] = None
     source: Optional[str] = None
     url: Optional[str] = None
+    category: List[str] = None
+
+    def __post_init__(self):
+        if self.category is None:
+            self.category = []
 
     def to_dict(self):
         return {
@@ -35,4 +40,5 @@ class Book:
             "isbn": self.isbn,
             "source": self.source,
             "url": self.url,
+            "category": "|".join(self.category) if self.category else "",
         }

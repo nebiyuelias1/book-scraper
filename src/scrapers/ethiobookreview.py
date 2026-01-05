@@ -48,12 +48,22 @@ class EthioBookReviewScraper(BaseScraper):
                 if meta_desc:
                     description = meta_desc['content'].strip()
 
+            category = []
+            # Look for "Category: Fiction" or similar in the text
+            details_text = soup.get_text()
+            cat_match = re.search(r"Category:\s*(.+)", details_text)
+            if cat_match:
+                cat_name = cat_match.group(1).split('\n')[0].strip()
+                if cat_name:
+                    category.append(cat_name)
+
             return {
                 "title": title,
                 "description": self._clean_text(description),
                 "publisher": None,
                 "published_at": None,
-                "isbn": None
+                "isbn": None,
+                "category": category
             }
         except Exception as e:
             print(f"Error getting details for {url}: {e}")
@@ -116,7 +126,8 @@ class EthioBookReviewScraper(BaseScraper):
                         publisher=details.get("publisher"),
                         isbn=details.get("isbn"),
                         source="EthioBookReview",
-                        url=detail_url if detail_url else url # Fallback to page url if no detail url
+                        url=detail_url if detail_url else url, # Fallback to page url if no detail url
+                        category=details.get("category", [])
                     )
                     books.append(book)
                     time.sleep(0.5)
