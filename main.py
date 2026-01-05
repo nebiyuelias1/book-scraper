@@ -44,7 +44,7 @@ def save_books_to_csv(books: List[Book], filename: str):
 
 
 def main():
-    LIMIT_PER_SOURCE = 1
+    LIMIT_PER_SOURCE = 5000
     EXCLUDE_AUTHORS = [
         # r"Abiy\s*Ahmed",
         # r"አብይ\s*አህመድ"
@@ -175,31 +175,35 @@ def main():
     if all_books:
         print("\nStarting Google Books Enrichment...")
         enricher = GoogleBooksEnricher()
-        
+
         # Filter books that need enrichment to avoid wasting threads
         books_to_enrich = [
-            b for b in all_books 
-            if not (b.isbn and b.page_count and b.publisher)
+            b for b in all_books if not (b.isbn and b.page_count and b.publisher)
         ]
-        
+
         total_to_enrich = len(books_to_enrich)
-        print(f"Identifying books to enrich: {total_to_enrich} out of {len(all_books)} need data.")
+        print(
+            f"Identifying books to enrich: {total_to_enrich} out of {len(all_books)} need data."
+        )
 
         if books_to_enrich:
             # max_workers=5 is a safe starting point to avoid 429s too quickly
             with ThreadPoolExecutor(max_workers=5) as executor:
                 # Submit all tasks
                 future_to_book = {
-                    executor.submit(enricher.enrich, book): book 
+                    executor.submit(enricher.enrich, book): book
                     for book in books_to_enrich
                 }
-                
+
                 completed = 0
                 for future in as_completed(future_to_book):
                     completed += 1
                     # Print progress (overwrite line)
-                    print(f"Enriching progress: {completed}/{total_to_enrich}...", end="\r")
-            
+                    print(
+                        f"Enriching progress: {completed}/{total_to_enrich}...",
+                        end="\r",
+                    )
+
             print(f"\nFinished processing {total_to_enrich} books.")
         else:
             print("No books needed enrichment.")
