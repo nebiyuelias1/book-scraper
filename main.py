@@ -1,6 +1,8 @@
 import csv
 import re
 import sys
+from abyssinica import romanization
+from fidel import Transliterate
 from typing import List
 from src.models import Book
 from src.scrapers.goodreads import GoodreadsScraper
@@ -14,7 +16,9 @@ def save_books_to_csv(books: List[Book], filename: str):
     fieldnames = [
         "title",
         "title_en",
+        "title_romanized",
         "author",
+        "author_romanized",
         "description",
         "published_at",
         "language",
@@ -51,10 +55,33 @@ def main():
         for book in new_books:
             if not book.title:
                 continue
-
+            
             if EXCLUDE_AUTHORS and book.author and exclude_pattern.search(book.author):
                 print(f"Skipping book by excluded author: {book.author} - {book.title}")
                 continue
+
+            # Ensure Author is in Amharic if it's currently in English
+            if book.author and not re.search(r'[\u1200-\u137F]', book.author):
+                try:
+                    # If it has no Ethiopic characters, assume it's English/Latin and convert
+                    book.author_romanized = book.author  # Save original English as romanized
+                    # Lowercase is required for fidel to handle capitalization correctly
+                    book.author = Transliterate(book.author.lower()).transliterate()
+                except Exception as e:
+                    print(f"Warning: Failed to transliterate author '{book.author}': {e}")
+
+            # Romanize if not already present
+            if not book.title_romanized and book.title:
+                try:
+                    book.title_romanized = romanization.romanize(book.title)
+                except Exception:
+                    book.title_romanized = None
+            
+            if not book.author_romanized and book.author:
+                try:
+                    book.author_romanized = romanization.romanize(book.author)
+                except Exception:
+                    book.author_romanized = None
 
             norm_title = " ".join(book.title.strip().lower().split())
             if norm_title not in seen_titles:
@@ -62,14 +89,16 @@ def main():
                 all_books.append(book)
                 count += 1
         return count
-    
+
     # 1. Scrape Mereb
     try:
         print("\nStarting Mereb Scraper...")
         mereb_scraper = MerebScraper()
         mereb_books = mereb_scraper.scrape(limit=LIMIT_PER_SOURCE)
         added = add_books_if_unique(mereb_books)
-        print(f"Finished Mereb. Collected {len(mereb_books)} books. Added {added} unique.")
+        print(
+            f"Finished Mereb. Collected {len(mereb_books)} books. Added {added} unique."
+        )
     except Exception as e:
         print(f"Mereb Scraper failed: {e}")
 
@@ -79,17 +108,21 @@ def main():
         ebr_scraper = EthioBookReviewScraper()
         ebr_books = ebr_scraper.scrape(limit=LIMIT_PER_SOURCE)
         added = add_books_if_unique(ebr_books)
-        print(f"Finished EthioBookReview. Collected {len(ebr_books)} books. Added {added} unique.")
+        print(
+            f"Finished EthioBookReview. Collected {len(ebr_books)} books. Added {added} unique."
+        )
     except Exception as e:
         print(f"EthioBookReview Scraper failed: {e}")
-    
+
     # 3. Scrape Goodreads
     try:
         print("\nStarting Goodreads Scraper...")
         gr_scraper = GoodreadsScraper()
-        gr_books = gr_scraper.scrape(limit=LIMIT_PER_SOURCE) 
+        gr_books = gr_scraper.scrape(limit=LIMIT_PER_SOURCE)
         added = add_books_if_unique(gr_books)
-        print(f"Finished Goodreads. Collected {len(gr_books)} books. Added {added} unique.")
+        print(
+            f"Finished Goodreads. Collected {len(gr_books)} books. Added {added} unique."
+        )
     except Exception as e:
         print(f"Goodreads Scraper failed: {e}")
 
@@ -99,7 +132,9 @@ def main():
         hahu_scraper = HahuBooksScraper()
         hahu_books = hahu_scraper.scrape(limit=LIMIT_PER_SOURCE)
         added = add_books_if_unique(hahu_books)
-        print(f"Finished HahuBooks. Collected {len(hahu_books)} books. Added {added} unique.")
+        print(
+            f"Finished HahuBooks. Collected {len(hahu_books)} books. Added {added} unique."
+        )
     except Exception as e:
         print(f"HahuBooks Scraper failed: {e}")
 

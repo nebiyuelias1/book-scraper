@@ -7,7 +7,11 @@ Collect data on Ethiopian books from multiple online sources and unify them into
 - **Multiple Sources**: Scrapes data from:
   - [Goodreads](https://www.goodreads.com/list/show/89548.Best_Amharic_Books) (Best Amharic Books list)
   - [EthioBookReview](https://www.ethiobookreview.com)
-  - [Mereb](https://www.mereb.shop) (Books Category)
+  - [Mereb](https://www.mereb.shop) (Books Category via Algolia API)
+  - [HahuBooks](https://www.hahubooks.com)
+  - [GebeyaAddis](https://www.gebeyaaddis.com)
+- **Romanization**: Automatically generates Latin-character phonetic versions (transliteration) of Amharic titles and authors using the `abyssinica` library.
+- **Amharic Script Normalization**: Automatically detects English/Latin author names and converts them to Amharic script using the `fidel` library to ensure consistency across the dataset.
 - **Unified Data Model**: Standardizes fields across different sources.
 - **Deduplication**: Filters out duplicate books based on normalized titles.
 - **Filtering**: Ability to exclude books by specific authors.
@@ -23,7 +27,9 @@ Collect data on Ethiopian books from multiple online sources and unify them into
 │       ├── base_scraper.py # Abstract base class
 │       ├── goodreads.py    # Goodreads implementation
 │       ├── mereb.py        # Mereb implementation
-│       └── ethiobookreview.py # EthioBookReview implementation
+│       ├── ethiobookreview.py # EthioBookReview implementation
+│       ├── hahubooks.py    # HahuBooks implementation
+│       └── gebeyaaddis.py  # GebeyaAddis implementation
 ├── main.py                 # Orchestration script
 └── .venv/                  # Python virtual environment
 ```
@@ -36,7 +42,9 @@ The generated CSV (`data/ethiopian_books.csv`) follows this structure:
 | :--- | :--- | :--- |
 | `title` | String | Title of the book (Primary, usually Amharic) |
 | `title_en` | String | English title (if available) |
-| `author` | String | Author name |
+| `title_romanized` | String | Phonetic Latin version of the title |
+| `author` | String | Author name (Normalized to Amharic script) |
+| `author_romanized` | String | Phonetic Latin version of the author name |
 | `description` | Text | Book synopsis (cleaned of newlines) |
 | `published_at` | Date | Normalized date (`YYYY-MM-DD`) |
 | `language` | String | Language code (default: `am`) |
@@ -62,7 +70,7 @@ The generated CSV (`data/ethiopian_books.csv`) follows this structure:
 
 3. **Install dependencies**:
    ```bash
-   pip install requests beautifulsoup4
+   pip install requests beautifulsoup4 abyssinica fidel
    ```
 
 ## Usage

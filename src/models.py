@@ -6,7 +6,9 @@ from typing import Optional
 class Book:
     title: str
     title_en: Optional[str] = None
+    title_romanized: Optional[str] = None
     author: Optional[str] = None
+    author_romanized: Optional[str] = None
     description: Optional[str] = None
     published_at: Optional[str] = (
         None  # Keeping as string 'YYYY-MM-DD' for CSV simplicity
@@ -22,7 +24,9 @@ class Book:
         return {
             "title": self.title,
             "title_en": self.title_en,
+            "title_romanized": self.title_romanized,
             "author": self.author,
+            "author_romanized": self.author_romanized,
             "description": self.description,
             "published_at": self.published_at,
             "language": self.language,
